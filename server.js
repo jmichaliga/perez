@@ -17,6 +17,8 @@
 const express = require('express');
 const puppeteer = require('puppeteer');
 const randomUUID = require('random-uuid');
+const bodyParser = require('body-parser');
+const cors = require('cors');
 const fs = require('fs');
 const util = require('util');
 const marked = require('marked');
@@ -27,6 +29,10 @@ const gsearch = require('./helpers/gsearch.js');
 const PORT = process.env.PORT || 8080;
 const GA_ACCOUNT = 'UA-114816386-1';
 const app = express();
+
+app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.json());
+app.use(cors());
 
 const isAllowedUrl = (string) => {
   try {
@@ -304,23 +310,23 @@ app.get('/test', async (request, response) => {
 });
 
 app.get('/read', async (request, response) => {
-  fs.readFile('./sources/index.json', 'utf8', (err, data) => {
+  fs.readFile('./sources/test.json', 'utf8', (err, data) => {
     if (err) throw err;
     const content = JSON.parse(data);
     response.send({
-      'content': content
+      'data': content
     });
   });
 });
 
 app.post('/posttest', async (request, response) => {
-  const content = {content: request.body.content};
+  const content = {result: request.body.content};
   response.status(200).send(content);
 });
 
 app.post('/write', async (request, response) => {
-  const content = {content: request.body.content};
-  fs.writeFileSync('./sources/test.json', JSON.stringify(content, null, 4), (err) => {
+  const content = {result: request.body.content};
+  fs.writeFile('./sources/test.json', JSON.stringify(content, null, 4), (err) => {
     response.status(200).send(content);
   });
 });
@@ -479,13 +485,13 @@ app.get('/scrape', async (request, response) => {
   }, {artist, source, WEB_URL});
 
   if (result.data.length) {
-    // fs.writeFileSync('./sources/'+source+'/'+artist+'.json', JSON.stringify(result, null, 4), (err) => {
-    //   if (err) {
-    //     console.error(err);
-    //     return;
-    //   }
-    //   console.log(source+'/'+artist +'. has been created');
-    // });
+    fs.writeFile('./sources/'+source+'/'+artist+'.json', JSON.stringify(result, null, 4), (err) => {
+      if (err) {
+        console.error(err);
+        return;
+      }
+      console.log(source+'/'+artist +'. has been created');
+    });
 
     // TODO: Add Record of this in a DB
     /*
@@ -495,25 +501,25 @@ app.get('/scrape', async (request, response) => {
       loc: us-central1-b
     */
     console.log('Data Returned! Records', result.data.length);
-    // let content = {};
-    // fs.readFileSync('./sources/index.json', 'utf8', (err, data) => {
-    //   if (err) throw err;
-    //   content = JSON.parse(data);
+    let content = {};
+    fs.readFile('./sources/index.json', 'utf8', (err, data) => {
+      if (err) throw err;
+      content = JSON.parse(data);
 
-    //   const addition = {
-    //     scrapedOn: result.scrapedOn,
-    //     source: result.source,
-    //     artist: result.artist
-    //   };
-    //   content.data.push(addition);
+      const addition = {
+        scrapedOn: result.scrapedOn,
+        source: result.source,
+        artist: result.artist
+      };
+      content.data.push(addition);
 
-    //   fs.writeFileSync('./sources/index.json', JSON.stringify(content, null, 4), (err) => {
-    //     if (err) {
-    //       console.error(err);
-    //     }
-    //     console.log('index updated');
-    //   });
-    // });
+      fs.writeFile('./sources/index.json', JSON.stringify(content, null, 4), (err) => {
+        if (err) {
+          console.error(err);
+        }
+        console.log('index updated');
+      });
+    });
   } else {
     console.log('No data to be found');
   }
