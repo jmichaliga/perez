@@ -313,6 +313,13 @@ app.get('/read', async (request, response) => {
   });
 });
 
+app.post('/write', async (request, response) => {
+  const content = {content: request.body.content};
+  fs.writeFileSync('./sources/test.json', JSON.stringify(content, null, 4), (err) => {
+    response.status(200).send(content);
+  });
+});
+
 app.get('/search', async (request, response) => {
   // TODO: Create this in a DB: See /scrape
   fs.readFile('./sources/index.json', 'utf8', (err, data) => {
