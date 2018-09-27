@@ -313,6 +313,11 @@ app.get('/read', async (request, response) => {
   });
 });
 
+app.post('/posttest', async (request, response) => {
+  const content = {content: request.body.content};
+  response.status(200).send(content);
+});
+
 app.post('/write', async (request, response) => {
   const content = {content: request.body.content};
   fs.writeFileSync('./sources/test.json', JSON.stringify(content, null, 4), (err) => {
