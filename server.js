@@ -25,6 +25,13 @@ const marked = require('marked');
 const ua = require('universal-analytics');
 const {URL} = require('url');
 const gsearch = require('./helpers/gsearch.js');
+const Firestore = require('@google-cloud/firestore');
+const admin = require('firebase-admin');
+
+const firestore = new Firestore({
+  projectId: 'perez-hilton',
+  keyFilename: 'perez-hilton-dee3251643fb.json',
+});
 
 const PORT = process.env.PORT || 8080;
 const GA_ACCOUNT = 'UA-114816386-1';
@@ -42,6 +49,7 @@ const isAllowedUrl = (string) => {
     return false;
   }
 };
+
 // Adds cors, records analytics hit, and prevents self-calling loops.
 app.use((request, response, next) => {
   const url = request.query.url;
@@ -304,12 +312,22 @@ app.get('/gsearch', async (request, response) => {
 });
 
 app.get('/test', async (request, response) => {
+  const document = firestore.doc('posts/intro-to-firestore');
+  // Enter new data into the document.
+  document.set({
+    title: 'Welcome to Firestore',
+    body: 'Hello World',
+  }).then(() => {
+    // Document created successfully.
+    console.log('document created successfully');
+  });
+
   response.send({
     'source': request.query.source
   });
 });
 
-app.get('/read', async (request, response) => {
+app.get('/fs/read', async (request, response) => {
   fs.readFile('./sources/test.json', 'utf8', (err, data) => {
     if (err) throw err;
     const content = JSON.parse(data);
@@ -324,14 +342,14 @@ app.post('/posttest', async (request, response) => {
   response.status(200).send(content);
 });
 
-app.post('/write', async (request, response) => {
+app.post('/fs/write', async (request, response) => {
   const content = {result: request.body.content};
   fs.writeFile('./sources/test.json', JSON.stringify(content, null, 4), (err) => {
     response.status(200).send(content);
   });
 });
 
-app.get('/search', async (request, response) => {
+app.get('/fs/search', async (request, response) => {
   // TODO: Create this in a DB: See /scrape
   fs.readFile('./sources/index.json', 'utf8', (err, data) => {
     if (err) throw err;
@@ -343,7 +361,7 @@ app.get('/search', async (request, response) => {
   });
 });
 
-app.get('/serve', async (request, response) => {
+app.get('/fs/serve', async (request, response) => {
   const artist = request.query.artist ? request.query.artist : 'drake';
   const source = request.query.source;
   let results = [];
@@ -385,7 +403,7 @@ app.get('/serve', async (request, response) => {
   return response.status(200).send({data: results});
 });
 
-app.get('/scrape', async (request, response) => {
+app.get('/fs/scrape', async (request, response) => {
   const artist = request.query.artist ? request.query.artist : 'drake';
   const source = request.query.source ? request.query.source : 'e-online';
 
@@ -500,6 +518,7 @@ app.get('/scrape', async (request, response) => {
       pw: scr4p3m3
       loc: us-central1-b
     */
+
     console.log('Data Returned! Records', result.data.length);
     let content = {};
     fs.readFile('./sources/index.json', 'utf8', (err, data) => {
@@ -520,6 +539,149 @@ app.get('/scrape', async (request, response) => {
         console.log('index updated');
       });
     });
+  } else {
+    console.log('No data to be found');
+  }
+
+  browser.close();
+  response.status(200).send(result);
+});
+
+app.get('/read', async (request, response) => {
+  const document = firestore.doc(request.query.source);
+  document.get().then(doc => {
+    response.status(200).send(doc);
+  });
+});
+
+app.post('/write', async (request, response) => {
+  const document = firestore.doc(request.body.source);
+  const content = JSON.parse(JSON.stringify(request.body.content));
+  document.set(content).then(doc => {
+    console.log('document saved!');
+    response.status(200).send(doc);
+  });
+});
+
+app.get('/scrape', async (request, response) => {
+  const artist = request.query.artist ? request.query.artist : 'drake';
+  const source = request.query.source ? request.query.source : 'e-online';
+
+  let WEB_URL = 'https://www.billboard.com/music/'+artist+'/news';
+
+  console.log('scraping:', artist, ' from ', source);
+
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+
+  switch (source) {
+    case 'billboard':
+      WEB_URL = 'https://www.billboard.com/music/'+artist+'/news';
+      break;
+    case 'tmz':
+      WEB_URL = 'http://www.tmz.com/person/'+artist;
+      break;
+    case 'people':
+      WEB_URL = 'http://people.com/tag/'+artist;
+      break;
+    case 'e-online':
+      WEB_URL = 'https://www.eonline.com/news/'+artist+'/articles';
+      break;
+    default:
+      WEB_URL = 'https://www.billboard.com/music/'+artist+'/news';
+      break;
+  }
+
+  await page.goto(WEB_URL);
+
+  const result = await page.evaluate(({artist, source, WEB_URL}) => {
+    const data = [];
+    let articles = null;
+
+    switch (source) {
+      case 'billboard':
+        // Billboard
+        articles = document.querySelectorAll('.artist-section__item');
+        for (const article of articles) {
+          const title = article.innerText;
+          const link = article.childNodes[1].href;
+          const host = article.childNodes[1].host;
+          const image = article.childNodes[1].childNodes[1].childNodes[1].childNodes[5].src;
+          data.push({title, link, host, image});
+        }
+        break;
+      case 'e-online':
+        // E! Online
+        articles = document.querySelectorAll('.articleList .story');
+        for (const article of articles) {
+          const title = article.childNodes[3].childNodes[1].innerText;
+          const link = article.childNodes[1].href;
+          // let host = article.baseURI
+          const host = 'e-online';
+          const image = article.childNodes[1].childNodes[1].childNodes[0].src;
+          const time = article.childNodes[3].childNodes[5].innerText;
+          data.push({title, link, host, image, time});
+        }
+        break;
+      case 'people':
+        // People
+        articles = document.querySelectorAll('.type-article');
+        for (const article of articles) {
+          const title = article.childNodes[7].children[1].innerText;
+          const link = article.children[0].href;
+          const host = article.children[0].host;
+          const image = article.children[0].children[0].dataset.src;
+          const time = new Date(); // article.childNodes[3].childNodes[5].innerText;
+          data.push({title, link, host, image, time});
+        }
+        break;
+      case 'tmz':
+        // TMZ
+        articles = document.querySelectorAll('.personsingle-storyitem');
+        for (const article of articles) {
+          const title = article.childNodes[3].children[0].innerText;
+          const subheading = article.childNodes[3].children[1].innerText;
+          const link = article.children[0].href;
+          const host = article.children[0].host;
+          // const image = article.children[0].children[1].src;
+          const time = article.childNodes[3].children[2].innerText;
+          data.push({title, subheading, link, host, time});
+        }
+        break;
+      default:
+        break;
+    }
+
+    const result = {
+      scrapedOn: +new Date(),
+      source: WEB_URL,
+      artist,
+      data
+    };
+
+    return result; // Success!
+  }, {artist, source, WEB_URL});
+
+  if (result.data.length) {
+    // write document in source
+    const document = firestore.doc('sources/index/'+source+'/'+artist);
+
+    const scrape = JSON.parse(JSON.stringify(result));
+    document.set(scrape).then(doc => {
+      console.log(source+'/'+artist +'. has been created');
+    });
+
+    console.log('Data Returned! Records', result.data.length);
+
+    // read index of sources
+    // const index = firestore.doc('scrapes/index');
+    // const addition = {
+    //   scrapedOn: result.scrapedOn,
+    //   source: result.source,
+    //   artist: result.artist
+    // };
+    // index.update({scrapes: admin.firestore.FieldValue.arrayUnion(JSON.stringify(addition))}); // Not ideal, but arrayUnions cant be solved on complex objects;
+    // console.log('scrape has been indexed!');
   } else {
     console.log('No data to be found');
   }
