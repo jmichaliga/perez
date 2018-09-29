@@ -33,10 +33,6 @@ const firestore = new Firestore({
   keyFilename: 'perez-hilton-dee3251643fb.json',
 });
 
-
-const settings = {timestampsInSnapshots: true};
-firestore.settings(settings);
-
 const PORT = process.env.PORT || 8080;
 const GA_ACCOUNT = 'UA-114816386-1';
 const app = express();
@@ -331,40 +327,80 @@ app.get('/test', async (request, response) => {
   });
 });
 
+app.get('/fs/read', async (request, response) => {
+  fs.readFile('./sources/test.json', 'utf8', (err, data) => {
+    if (err) throw err;
+    const content = JSON.parse(data);
+    response.send({
+      'data': content
+    });
+  });
+});
+
 app.post('/posttest', async (request, response) => {
   const content = {result: request.body.content};
   response.status(200).send(content);
 });
 
-app.get('/read', async (request, response) => {
-  const document = firestore.doc(request.query.source);
-  document.get().then(doc => {
-    response.status(200).send(doc);
+app.post('/write', async (request, response) => {
+  const content = {result: request.body.content};
+  fs.writeFile('./sources/test.json', JSON.stringify(content, null, 4), (err) => {
+    response.status(200).send(content);
   });
 });
 
 app.get('/search', async (request, response) => {
-  const url = request.query.url;
-  const scrapes = firestore.collection('scrapes');
-  scrapes.where('source', '==', url).get()
-      .then(snapshot => {
-        snapshot.forEach(doc => {
-          console.log(doc.id, '=>', doc.data());
-          response.status(200).send(doc.data());
-        });
-      })
-      .catch(err => {
-        console.log('Error getting documents', err);
-      });
+  // TODO: Create this in a DB: See /scrape
+  fs.readFile('./sources/index.json', 'utf8', (err, data) => {
+    if (err) throw err;
+    const content = JSON.parse(data);
+    const result = content.data.filter(f => f.source === request.query.source );
+    response.send({
+      'results': result
+    });
+  });
 });
 
-app.post('/write', async (request, response) => {
-  const document = firestore.doc(request.body.source);
-  const content = JSON.parse(JSON.stringify(request.body.content));
-  document.set(content).then(doc => {
-    console.log('document saved!');
-    response.status(200).send(doc);
-  });
+app.get('/serve', async (request, response) => {
+  const artist = request.query.artist ? request.query.artist : 'drake';
+  const source = request.query.source;
+  let results = [];
+
+  function moduleExists( name ) {
+    try {
+      return require.resolve( name );
+    } catch (e) {
+      return false;
+    }
+  }
+
+  if (source && moduleExists('./sources/'+source+'/'+artist+'.json')) {
+    const json = require('./sources/'+source+'/'+artist+'.json');
+    results = json.data;
+  } else if (source) {
+    results = [];
+  } else {
+    const sources = ['billboard', 'e-online', 'people', 'tmz'];
+    const collection = {};
+    for (const source of sources ) {
+      try {
+        if (moduleExists('./sources/'+source+'/'+artist+'.json')) {
+          const json = require('./sources/'+source+'/'+artist+'.json');
+          Object.assign(collection, json.data);
+        }
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
+    for (const i in collection) {
+      if (typeof collection[i] === 'object') {
+        results.push(collection[i]);
+      }
+    }
+  }
+
+  return response.status(200).send({data: results});
 });
 
 app.get('/scrape', async (request, response) => {
@@ -467,26 +503,42 @@ app.get('/scrape', async (request, response) => {
   }, {artist, source, WEB_URL});
 
   if (result.data.length) {
-    // write document in source
-    const document = firestore.doc('sources/index/'+source+'/'+artist);
-
-    const scrape = JSON.parse(JSON.stringify(result));
-    document.set(scrape).then(doc => {
+    fs.writeFile('./sources/'+source+'/'+artist+'.json', JSON.stringify(result, null, 4), (err) => {
+      if (err) {
+        console.error(err);
+        return;
+      }
       console.log(source+'/'+artist +'. has been created');
     });
 
-    console.log('Data Returned! Records', result.data.length);
+    // TODO: Add Record of this in a DB
+    /*
+      db: scraper-db
+      user: perez
+      pw: scr4p3m3
+      loc: us-central1-b
+    */
 
-    // read index of sources
-    const index = firestore.collection('scrapes');
-    const addition = {
-      scrapedOn: result.scrapedOn,
-      source: result.source,
-      artist: result.artist
-    };
-    console.log('addition:', addition);
-    index.add(addition);
-    console.log('scrape has been indexed!');
+    console.log('Data Returned! Records', result.data.length);
+    let content = {};
+    fs.readFile('./sources/index.json', 'utf8', (err, data) => {
+      if (err) throw err;
+      content = JSON.parse(data);
+
+      const addition = {
+        scrapedOn: result.scrapedOn,
+        source: result.source,
+        artist: result.artist
+      };
+      content.data.push(addition);
+
+      fs.writeFile('./sources/index.json', JSON.stringify(content, null, 4), (err) => {
+        if (err) {
+          console.error(err);
+        }
+        console.log('index updated');
+      });
+    });
   } else {
     console.log('No data to be found');
   }
