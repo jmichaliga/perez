@@ -9,11 +9,10 @@ const firestore = new Firestore({
 firestore.settings({timestampsInSnapshots: true});
 
 const getArtists = async () => {
-  console.log('->getArtists');
   firestore.collection('artists').get()
       .then(snapshot => {
         snapshot.forEach(artist => {
-          console.log('->', artist.id, artist.data());
+          // console.log('->', artist.id, artist.data());
           scrapeArtist(artist.data());
         });
       }).catch(err => {
@@ -22,18 +21,20 @@ const getArtists = async () => {
 };
 
 const scrapeArtist = (artist) => {
-  console.log('scraping..', artist);
-
   const sources = ['e', 'billboard', 'people', 'tmz'];
   const artistName = artist.name.toLowerCase().replace(' ', '-');
 
   for (const src of sources) {
-    if (artist['link_'+src] !== null) {
-      console.log('->', artist['link_'+src]);
+    if (artist['link_'+src]) {
+      console.log(artistName, 'scraping ->', 'link_'+src, 'at', artist['link_'+src]);
+
       fetch('http://localhost:8080/scrape?artist='+artistName+'&source='+src)
           .then(res => res.json())
           .then(resp => {
             console.log('<<', resp);
+          })
+          .catch(err => {
+            console.log('err: ', err);
           });
     }
   }
@@ -48,29 +49,31 @@ const scrapeArtist = (artist) => {
 const orchestrate = async () => {
   const artists = await getArtists();
   console.log('>', artists);
-  artists.forEach(artist => {
-    scrapeArtist(artist);
-  });
+  if (artists.length) {
+    artists.forEach(artist => {
+      scrapeArtist(artist);
+    });
+  }
 };
 
-// const task = cron.schedule('* * * * *', () => {
-//   orchestrate();
-// }, {
-//   scheduled: false
-// });
+const task = cron.schedule('* * * * *', () => {
+  orchestrate();
+}, {
+  scheduled: false
+});
 
-// task.start();
+task.start();
 
-const repeatAt = async (ms, fn) => {
-  const promise = new Promise((resolve, reject) => {
-    setInterval(() => {
-      resolve(fn());
-    }, ms);
-  });
+// const repeatAt = async (ms, fn) => {
+//   const promise = new Promise((resolve, reject) => {
+//     setInterval(() => {
+//       resolve(fn());
+//     }, ms);
+//   });
 
-  const result = await promise;
-  console.log(result);
-};
+//   const result = await promise;
+//   console.log(result);
+// };
 
-repeatAt(5000, orchestrate);
+// repeatAt(1000, orchestrate);
 // getArtists();
