@@ -26,7 +26,7 @@ const ua = require('universal-analytics');
 const {URL} = require('url');
 const gsearch = require('./helpers/gsearch.js');
 const Firestore = require('@google-cloud/firestore');
-const admin = require('firebase-admin');
+// const admin = require('firebase-admin');
 
 const firestore = new Firestore({
   projectId: 'perez-hilton',
@@ -350,11 +350,12 @@ app.get('/search', async (request, response) => {
       .then(snapshot => {
         snapshot.forEach(doc => {
           console.log(doc.id, '=>', doc.data());
-          response.status(200).send(doc.data());
+          response.status(200).send({results: doc.data()});
         });
       })
       .catch(err => {
-        console.log('Error getting documents', err);
+        console.log('Error getting result', err);
+        response.status(200).send({results: []});
       });
 });
 
