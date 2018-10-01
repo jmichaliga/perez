@@ -28,10 +28,11 @@ app.get('/read', async (request, response) => {
 app.get('/search', async (request, response) => {
   const url = request.query.url;
   const scrapes = firestore.collection('scrapes');
+  console.log('looking up ->', url);
   scrapes.where('source', '==', url).get()
       .then(snapshot => {
         snapshot.forEach(doc => {
-          console.log(doc.id, '=>', doc.data());
+          console.log(url, ': ', doc.id, '=>', doc.data());
           response.status(200).send({results: doc.data()});
         });
       })
