@@ -1,3 +1,6 @@
+/*
+NOTE: This process can run independently
+*/
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -25,16 +28,21 @@ app.get('/read', async (request, response) => {
   });
 });
 
-app.get('/search', async (request, response) => {
+app.get('/search', (request, response) => {
   const url = request.query.url;
   const scrapes = firestore.collection('scrapes');
   console.log('looking up ->', url);
-  scrapes.where('source', '==', url).get()
-      .then(snapshot => {
-        snapshot.forEach(doc => {
-          console.log(url, ': ', doc.id, '=>', doc.data());
-          response.status(200).send({results: doc.data()});
-        });
+  scrapes.where('source', '==', url).orderBy('scrapedOn').limit(1).get()
+      .then(qSnapshot => {
+        console.log('snap:', qSnapshot.empty);
+        if (!qSnapshot.empty) {
+          qSnapshot.forEach(doc => {
+            console.log(url, ': ', doc.id, '=>', doc.data());
+            response.status(200).send({results: doc.data()});
+          });
+        } else {
+          response.status(200).send({results: []});
+        }
       })
       .catch(err => {
         console.log('Error getting result', err);
