@@ -496,6 +496,35 @@ app.get('/scrape', async (request, response) => {
   response.status(200).send(result);
 });
 
+app.get('/collections/:artist', async (request, response) => {
+
+  const artistName = request.params.artist;
+  const sources = ['billboard', 'tmz', 'people', 'e-online'];
+
+  const collection = [];
+  for (const source of sources) {
+    // sources/index/:source/:artistName
+    console.log('collecting ' + artistName + ' with '+ source);
+
+    const srcDoc = firestore.doc('sources/index/'+source+'/'+artistName);
+    await srcDoc.get()
+        .then(doc => {
+          if (!doc.exists) {
+            console.log('Missing ', artistName, ' in ', source);
+          } else {
+            console.log(doc.id, '=>', doc.data());
+            collection.push(doc.data());
+          }
+        })
+        .catch(err => {
+          console.log('Error getting result', err);
+        });
+  }
+
+  console.log('->', collection);
+  response.status(200).send({results: collection});
+});
+
 app.listen(PORT, function() {
   console.log(`App is listening on port ${PORT}`);
 });
