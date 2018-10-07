@@ -369,12 +369,10 @@ app.post('/write', async (request, response) => {
 });
 
 app.get('/scrape', async (request, response) => {
-  const artist = request.query.artist ? request.query.artist : 'drake';
+  let artist = request.query.artist ? request.query.artist : 'drake';
   const source = request.query.source ? request.query.source : 'e-online';
 
   let WEB_URL = 'https://www.billboard.com/music/'+artist+'/news';
-
-  console.log('scraping:', artist, ' from ', source);
 
   const browser = await puppeteer.launch();
   const page = await browser.newPage();
@@ -389,14 +387,17 @@ app.get('/scrape', async (request, response) => {
     case 'people':
       WEB_URL = 'http://people.com/tag/'+artist;
       break;
+    case 'e':
+    case 'eonline':
     case 'e-online':
-      WEB_URL = 'https://www.eonline.com/news/'+artist+'/articles';
+      WEB_URL = 'https://www.eonline.com/news/'+ artist.replace(/[-]/g, '_') +'/articles';
       break;
     default:
       WEB_URL = 'https://www.billboard.com/music/'+artist+'/news';
       break;
   }
 
+  console.log('scraping:', artist, ' from ', source, ' > ', WEB_URL);
   await page.goto(WEB_URL);
 
   const result = await page.evaluate(({artist, source, WEB_URL}) => {
@@ -469,6 +470,10 @@ app.get('/scrape', async (request, response) => {
 
   if (result.data.length) {
     // write document in source
+    if (source === 'e-online') {
+      artist.replace(/[_]/g, '-'); // revert back
+    }
+
     const document = firestore.doc('sources/index/'+source+'/'+artist);
 
     const scrape = JSON.parse(JSON.stringify(result));
@@ -497,15 +502,12 @@ app.get('/scrape', async (request, response) => {
 });
 
 app.get('/collections/:artist', async (request, response) => {
-
   const artistName = request.params.artist;
   const sources = ['billboard', 'tmz', 'people', 'e-online'];
 
   const collection = [];
   for (const source of sources) {
     // sources/index/:source/:artistName
-    console.log('collecting ' + artistName + ' with '+ source);
-
     const srcDoc = firestore.doc('sources/index/'+source+'/'+artistName);
     await srcDoc.get()
         .then(doc => {
@@ -520,8 +522,6 @@ app.get('/collections/:artist', async (request, response) => {
           console.log('Error getting result', err);
         });
   }
-
-  console.log('->', collection);
   response.status(200).send({results: collection});
 });
 
