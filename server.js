@@ -413,7 +413,8 @@ app.get('/scrape', async (request, response) => {
           const link = article.childNodes[1].href;
           const host = article.childNodes[1].host;
           const image = article.childNodes[1].childNodes[1].childNodes[1].childNodes[5].src;
-          data.push({title, link, host, image});
+          const time = +new Date();
+          data.push({title, link, host, image, time});
         }
         break;
       case 'e-online':
@@ -422,7 +423,6 @@ app.get('/scrape', async (request, response) => {
         for (const article of articles) {
           const title = article.childNodes[3].childNodes[1].innerText;
           const link = article.childNodes[1].href;
-          // let host = article.baseURI
           const host = 'e-online';
           const image = article.childNodes[1].childNodes[1].childNodes[0].src;
           const time = article.childNodes[3].childNodes[5].innerText;
@@ -437,7 +437,7 @@ app.get('/scrape', async (request, response) => {
           const link = article.children[0].href;
           const host = article.children[0].host;
           const image = article.children[0].children[0].dataset.src;
-          const time = new Date(); // article.childNodes[3].childNodes[5].innerText;
+          const time = +new Date();
           data.push({title, link, host, image, time});
         }
         break;
@@ -449,9 +449,9 @@ app.get('/scrape', async (request, response) => {
           const subheading = article.childNodes[3].children[1].innerText;
           const link = article.children[0].href;
           const host = article.children[0].host;
-          // const image = article.children[0].children[1].src;
+          const image = article.children[0].children[0].src;
           const time = article.childNodes[3].children[2].innerText;
-          data.push({title, subheading, link, host, time});
+          data.push({title, subheading, link, host, image, time});
         }
         break;
       default:

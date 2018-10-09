@@ -29,11 +29,10 @@ const scrapeArtist = (artist, id) => {
 
   for (let src of sources) {
     if (artist['link_'+src]) {
+      console.log(artistName, 'scraping ->', 'link_'+src, 'at', artist['link_'+src]);
       if (src === 'e') {
         src = 'e-online';
       }
-      console.log(artistName, 'scraping ->', 'link_'+src, 'at', artist['link_'+src]);
-
       fetch('http://localhost:8080/scrape?artist='+artistName+'&source='+src)
           .then(res => res.json())
           .then(resp => {
