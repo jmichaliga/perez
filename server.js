@@ -424,7 +424,7 @@ app.get('/scrape', async (request, response) => {
           const title = article.childNodes[3].childNodes[1].innerText;
           const link = article.childNodes[1].href;
           const host = 'e-online';
-          const image = article.childNodes[1].childNodes[1].childNodes[0].src;
+          const image = article.childNodes[1].childNodes[1].childNodes[0].src.split('?')[0];
           const time = article.childNodes[3].childNodes[5].innerText;
           data.push({title, link, host, image, time});
         }
