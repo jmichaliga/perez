@@ -342,6 +342,14 @@ app.get('/read', async (request, response) => {
   })
 })
 
+app.get('/read/:doc', async (request, response) => {
+  console.log('>', request.params.doc)
+  const document = firestore.doc(request.params.doc)
+  document.get().then(doc => {
+    response.status(200).send(doc)
+  })
+})
+
 app.get('/search', async (request, response) => {
   const url = request.query.url
   const scrapes = firestore.collection('scrapes')
