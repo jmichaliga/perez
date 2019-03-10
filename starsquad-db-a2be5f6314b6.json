@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "starsquad-db",
+  "private_key_id": "a2be5f6314b6776562b1766483f90f05dc3e166e",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC1qSfZILOkLapj\nelxr1knA0vs/4Y69Lx0iQD3j/Zfb7dAOPNRVGgFwshW6N7MADeTGLFzeyJa9bmfk\ne4lGcveBJkLHZlCZxEjnFp9kRD1L0lgeOuzR9JLKxJ2qIipGi5tIy+KEFfhvIsC8\nmcMw5hioBBdsxbGhJo7VhzbI5dTrbkcss3/sQPuy/X9XmgFPK7+nzr+lAnyU+D5Q\nMzh5y2aamBZEP06dY14CxK94UpS3rCAK6o3sTQc0VrqebTgIEJx6vPMRSCx9k2WB\nlx/vSb28NIJat0BsZVubOp8SK6zXaz34mOQddZTpwjsDr6c4zL5eAMwr088Z+32X\nxwlgf4WXAgMBAAECggEARLFYXiSdiYGzIrbMaAK6FO4zD+7tGODN9Xuxa5sjZ4i/\n2gJqkFurG8BbsvUI/QZD8iQoYh4b0joDk0SbnkYvDWk4a0pnRB4TKz9EupeLTjaW\nF6hUkPgY4hADRqhwsAhuidJ/L09XiD7t/uNuCfmYbUBO01TWXIfGDzx4HPO71eJS\naccC396+bBM222VIRSh/HXOoeiq9IrIiph5VElVz3LvQxm7vE/y2wXqLAJAAiTWK\n1V72vsSFfspHZd8os3zBJP01g0Rzzhj3PtP1NoazdwNTpcmC5yQ/w/0zGQClNlQi\n2stROq49d51O38Q+naK+QfZj/+aJdLMU+xJvly+8oQKBgQD8jXf7DQbIxaQAN72j\nje+lJdXa1rSQ/sCShUd+jOQH815U5A3ny16PwxQUM5JCVi9XRjxEV/UA464qHHAW\nMDwHl7uMAiN94Ns83bOFBa881sZaiS9uEYC3yfwkwS4Q9aHyjJuhMFiiYySYxDgO\nkXXY+YsNzmAY4Uv9z9D/8PAK/wKBgQC4I/WT4f/vLI2CXJ7ycQDjgspovlJOswvB\nHH9kjP5x8qi/Luad7qKe9KjQCzkW+Gi5CVYrr97pgFLihuu6/XqUVOFvpht/dcRa\n40hdQfJ+xWtmom8gLNRpjaJRLg6W30XChJ1LdXnAUrrneBB/iDtbb/C2mASbrlbu\nrugFvdP9aQKBgQC4AkM28ajNw+LYHcTYU+QVidmlFuZ89oBMwTr0I6dJe7JxW7Ae\nAPkm+dW5WlHob28SwaPLj+J9AWa2W/32zLIQPidxvWUqpBhY4peYBipFw57F/EpI\nggws3MgP54iu5qlWVchWyyjpOB9EB0NoqecZbcg5CPLPbee2SCJZOK1M9QKBgQCg\nj7JdzW115ppJdmueKMzGlM/bf0CToOl57Fhkm9BuGVHsyn+KbH9eLSVZqr+P+PCP\nj8WUeFjdr+gV3+GCfe25kz2zNdq6TDz3p0D9GDjTM19P8gkFvDFHDJnhQVC1W2Af\nmbTyDDAqc7jHhliUa3yeYUA6Ztl1yhHBM7/a6cgEKQKBgDxZ+lHuRl2FLWfd2w+A\nSQSsYeVV6DCVc4Zzok01HGG0wTVEtq+xQIH2J6jTflQCPLYU+CvpZRvjBuOs9obB\nKNjBxfhuR6Y1IOoGaI6EQqLWkcrLcRpGvIuEcakMADal0rOU00K/B4yW20QlKgn9\nyNxPfAr3PukfKSzQTFh8j/qd\n-----END PRIVATE KEY-----\n",
+  "client_email": "developer@starsquad-db.iam.gserviceaccount.com",
+  "client_id": "106602479748741782028",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/developer%40starsquad-db.iam.gserviceaccount.com"
+}
