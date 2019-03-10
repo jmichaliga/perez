@@ -1,9 +1,12 @@
 /*
 NOTE: This process needs Server.js running on 8080
 */
-const cron = require('node-cron')
+// const cron = require('node-cron')
 const Firestore = require('@google-cloud/firestore')
 const fetch = require('node-fetch')
+
+const domain = `https://perez-hilton.appspot.com`
+// const domain = `http://localhost:8080`
 
 const firestore = new Firestore({
   projectId: 'starsquad-db',
@@ -32,7 +35,7 @@ const scrapeArtist = (artist, id) => {
       if (src === 'e') {
         src = 'e-online'
       }
-      fetch(`http://localhost:8080/scrape/${artistName}/${src}`)
+      fetch(`${domain}/scrape/${artistName}/${src}`)
         .then(res => res.json())
         .then(resp => {
           console.log('<<', resp)
@@ -53,7 +56,7 @@ const scrapeArtist = (artist, id) => {
   */
 }
 
-const orchestrate = async () => {
+const sync = async () => {
   const artists = await getArtists()
   console.log('>', artists)
   if (artists.length) {
@@ -92,5 +95,6 @@ const wait = async (ms) => {
 // }
 
 // repeatAt(1000, orchestrate)
-orchestrate()
 // getArtists()
+
+module.exports = sync

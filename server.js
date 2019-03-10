@@ -28,6 +28,8 @@ const gsearch = require('./helpers/gsearch.js')
 const Firestore = require('@google-cloud/firestore')
 // const admin = require('firebase-admin')
 
+const sync = require('runner')
+
 const firestore = new Firestore({
   projectId: 'perez-hilton',
   keyFilename: 'perez-hilton-dee3251643fb.json',
@@ -353,7 +355,7 @@ app.get('/read/:doc', async (request, response) => {
 app.get('/search', async (request, response) => {
   const url = request.query.url
   const scrapes = firestore.collection('scrapes')
-  scrapes.where('source', '==', url).get()
+  scrapes.where('source', '==', url).orderBy('scrapedOn').limit(1).get()
       .then(snapshot => {
         snapshot.forEach(doc => {
           console.log(doc.id, '=>', doc.data())
@@ -530,6 +532,11 @@ app.get('/collections/:artist', async (request, response) => {
         })
   }
   response.status(200).send({results: collection})
+})
+
+app.get('/sync', asnyc (request, response) => {
+  await sync()
+  response.status(200).send({results: 'syncd!'})
 })
 
 app.listen(PORT, function() {
