@@ -481,11 +481,11 @@ app.get('/scrape/:artist/:source', async (request, response) => {
       artist.replace(/[_]/g, '-') // revert back
     }
 
-    const document = firestore.doc('sources/index/'+source+'/'+artist)
+    const document = firestore.doc(`sources/index/${source}/${artist}`)
 
     const scrape = JSON.parse(JSON.stringify(result))
     document.set(scrape).then(doc => {
-      console.log(source+'/'+artist +'. has been created')
+      console.log(`${source}/${artist} has been created`)
     })
 
     console.log('Data Returned! Records', result.data.length)
@@ -509,17 +509,17 @@ app.get('/scrape/:artist/:source', async (request, response) => {
 })
 
 app.get('/collections/:artist', async (request, response) => {
-  const artistName = request.params.artist
+  const artist = request.params.artist
   const sources = ['billboard', 'tmz', 'people', 'e-online']
 
   const collection = []
   for (const source of sources) {
-    // sources/index/:source/:artistName
-    const srcDoc = firestore.doc('sources/index/'+source+'/'+artistName)
+    // sources/index/:source/:artist
+    const srcDoc = firestore.doc(`sources/index/${source}/${artist}`)
     await srcDoc.get()
         .then(doc => {
           if (!doc.exists) {
-            console.log('Missing ', artistName, ' in ', source)
+            console.log('Missing ', artist, ' in ', source)
           } else {
             console.log(doc.id, '=>', doc.data())
             collection.push(doc.data())
