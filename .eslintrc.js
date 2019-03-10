@@ -1,6 +1,6 @@
 module.exports = {
   // start with google standard style
-  //     https://github.com/google/eslint-config-google/blob/master/index.js
+  // https://github.com/google/eslint-config-google/blob/master/index.js
   "extends": ["eslint:recommended", "google"],
   "env": {
     "node": true,
