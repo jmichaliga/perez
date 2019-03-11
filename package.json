@@ -1,12 +1,13 @@
 {
-  "name": "pptraas",
+  "name": "perez",
   "version": "0.0.2",
   "private": true,
-  "description": "Puppeteer as a service",
+  "description": "Scraper of gossip as a service",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "deploy": "gcloud app deploy . --project perez-hilton",
+    "deploy": "gcloud app deploy",
+    "deployer": "gcloud app deploy . --project perez-hilton",
     "lint": "eslint .",
     "test": "npm run lint"
   },
